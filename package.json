@@ -1,0 +1,23 @@
+{
+  "name": "discord-bot-test",
+  "version": "1.0.0",
+  "description": "This repository's purpose is to serve as experimentation grounds for our multiple discord bots.",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teller-protocol/discord-bot-test.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/teller-protocol/discord-bot-test/issues"
+  },
+  "homepage": "https://github.com/teller-protocol/discord-bot-test#readme",
+  "dependencies": {
+    "discord.io": "^2.5.3",
+    "winston": "^3.7.2"
+  }
+}
