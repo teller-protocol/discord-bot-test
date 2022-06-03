@@ -4,18 +4,8 @@ var logger = require("winston");
 
 var auth = require("./auth.json");
 
-// Configure logger settings
-
-logger.remove(logger.transports.Console);
-
-logger.add(new logger.transports.Console(), {
-  colorize: true,
-});
-
-logger.level = "debug";
-
+console.log("test");
 // Initialize Discord Bot
-
 var bot = new Discord.Client({
   token: auth.token,
 
@@ -45,11 +35,11 @@ bot.on("message", function (user, userID, channelID, message, evt) {
     switch (cmd) {
       // !ping
 
-      case "ping":
+      case "loan":
+        const message = `Hello ${user}! If you have a loan with Teller, kindly paste in your address and we’ll fetch back all the necessary details of that loan.`;
         bot.sendMessage({
           to: channelID,
-
-          message: "Pong!",
+          message: message,
         });
 
         break;

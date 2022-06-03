@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/teller-protocol/discord-bot-test#readme",
   "dependencies": {
-    "discord.io": "^2.5.3",
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
     "winston": "^3.7.2"
   }
 }
