@@ -5,13 +5,13 @@ var gql = require("graphql-request");
 
 // graphql client
 const client = new gql.GraphQLClient(
-  "https://thegraph.com/hosted-service/subgraph/teller-protocol/teller-v2"
+  "https://api.thegraph.com/subgraphs/name/teller-protocol/teller-v2"
 );
 
 const returnBidDetails = async (address) => {
   const query = gql.gql`
     {
-      bids(where: { borrowerAddress: ${address} }) {
+      bids (where: { borrowerAddress: "${address}" }){
         borrowerAddress
       }
     }
@@ -45,12 +45,18 @@ bot.on(
       args = args.splice(1);
 
       if (/0x[a-fA-F0-9]{40}/g.test(cmd)) {
-        const details = await returnBidDetails(cmd);
-        console.log(details);
-        bot.sendMessage({
-          to: channelID,
-          message: "Yo that looks like a correct Ethereum address!",
-        });
+        const bidDetails = await returnBidDetails(
+          "0xe0110C6EE2138Ecf9962a6f9f6Ad329cDFE1FA17"
+        );
+        if (bidDetails?.bids.length === 0) {
+          bot.sendMessage({
+            to: channelID,
+            message:
+              "There are no bids within the Teller protocol containing that address!",
+          });
+        } else {
+          console.log(bidDetails);
+        }
       } else if (cmd === "loan") {
         const message = `Hello ${user}! If you have a loan with Teller, kindly paste in your address and we’ll fetch back all the necessary details of that loan.`;
         bot.sendMessage({
