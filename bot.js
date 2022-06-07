@@ -2,6 +2,7 @@ var Discord = require("discord.io");
 var logger = require("winston");
 var auth = require("./auth.json");
 var gql = require("graphql-request");
+const { fromUnixTime, format } = require("date-fns");
 
 // graphql client
 const client = new gql.GraphQLClient(
@@ -11,14 +12,21 @@ const client = new gql.GraphQLClient(
 const returnBidDetails = async (address) => {
   const query = gql.gql`
     {
-      bids (where: { borrowerAddress: "${address}" }){
+      bids (where: { borrowerAddress: "${address}", status_not: "Cancelled" }){
         borrowerAddress
+        lastRepaidTimestamp
+        bidId
+        status
       }
     }
   `;
 
   const data = await client.request(query);
   return data;
+};
+
+const returnDate = (epochTime) => {
+  if (+epochTime != 0) return format(fromUnixTime(+epochTime), "PP");
 };
 
 // Initialize Discord Bot
@@ -45,9 +53,7 @@ bot.on(
       args = args.splice(1);
 
       if (/0x[a-fA-F0-9]{40}/g.test(cmd)) {
-        const bidDetails = await returnBidDetails(
-          "0xe0110C6EE2138Ecf9962a6f9f6Ad329cDFE1FA17"
-        );
+        const bidDetails = await returnBidDetails(cmd.toString());
         if (bidDetails?.bids.length === 0) {
           bot.sendMessage({
             to: channelID,
@@ -55,7 +61,17 @@ bot.on(
               "There are no bids within the Teller protocol containing that address!",
           });
         } else {
-          console.log(bidDetails);
+          const bid = bidDetails?.bids[0];
+          const message = `Hello! The bid id ${bid.bidId} is a ${
+            bid?.status
+          } loan. The last time this loan was repaid was on: ${returnDate(
+            bid.lastRepaidTimestamp
+          )}`;
+          console.log(message);
+          bot.sendMessage({
+            to: channelID,
+            message: message,
+          });
         }
       } else if (cmd === "loan") {
         const message = `Hello ${user}! If you have a loan with Teller, kindly paste in your address and we’ll fetch back all the necessary details of that loan.`;
