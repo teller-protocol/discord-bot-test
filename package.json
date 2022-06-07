@@ -18,6 +18,7 @@
   "homepage": "https://github.com/teller-protocol/discord-bot-test#readme",
   "dependencies": {
     "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "graphql-request": "^4.3.0",
     "winston": "^3.7.2"
   }
 }
