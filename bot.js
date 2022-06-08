@@ -8,21 +8,35 @@ const { fromUnixTime, format } = require("date-fns");
 const client = new gql.GraphQLClient(
   "https://api.thegraph.com/subgraphs/name/teller-protocol/teller-v2"
 );
-
+// (where: { borrowerAddress: "${address}" })
 const returnBidDetails = async (address) => {
   const query = gql.gql`
     {
-      bids (where: { borrowerAddress: "${address}", status_not: "Cancelled" }){
+      bids(where: { borrowerAddress: "${address}" }) {
         borrowerAddress
         lastRepaidTimestamp
         bidId
         status
+        marketplaceId
+        marketplace {
+          metadataURI
+        }
       }
     }
   `;
 
   const data = await client.request(query);
   return data;
+};
+
+const queryIpfsMetadataURI = (metadataURI) => {
+  metadataURI.map((x) => {
+    console.log(x);
+    if (x[0] === "i") {
+      const uriToQuery = "https://ipfs.io/ipfs/" + x.substring(12, x.length);
+      console.log(uriToQuery);
+    }
+  });
 };
 
 const returnDate = (epochTime) => {
@@ -51,7 +65,6 @@ bot.on(
       var args = message.substring(1).split(" ");
       var cmd = args[0];
       args = args.splice(1);
-
       if (/0x[a-fA-F0-9]{40}/g.test(cmd)) {
         const bidDetails = await returnBidDetails(cmd.toString());
         if (bidDetails?.bids.length === 0) {
@@ -62,23 +75,21 @@ bot.on(
           });
         } else {
           const bid = bidDetails?.bids[0];
+          const marketplaceIDs = bidDetails?.bids
+            .map((x) => x.marketplaceId && x.marketplace.metadataURI)
+            .filter((value, index, self) => self.indexOf(value) === index);
+          queryIpfsMetadataURI(marketplaceIDs);
           const message = `Hello! The bid id ${bid.bidId} is a ${
             bid?.status
           } loan. The last time this loan was repaid was on: ${returnDate(
             bid.lastRepaidTimestamp
           )}`;
-          console.log(message);
+
           bot.sendMessage({
             to: channelID,
             message: message,
           });
         }
-      } else if (cmd === "loan") {
-        const message = `Hello ${user}! If you have a loan with Teller, kindly paste in your address and we’ll fetch back all the necessary details of that loan.`;
-        bot.sendMessage({
-          to: channelID,
-          message: message,
-        });
       }
     }
   }
