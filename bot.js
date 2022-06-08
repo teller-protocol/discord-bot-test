@@ -14,7 +14,7 @@ const client = new gql.GraphQLClient(
 const returnBidDetails = async (address) => {
   const query = gql.gql`
     {
-      bids(where: { borrowerAddress: "${address}" }) {
+      bids(where: { borrowerAddress: "${address}", status: "Accepted" }) {
         borrowerAddress
         lastRepaidTimestamp
         bidId
@@ -31,22 +31,24 @@ const returnBidDetails = async (address) => {
   return data;
 };
 
-const checkIpfsMetadataType = (metadataURI) => {
-  metadataURI.map((x) => {
-    console.log(fetch);
-    if (x[0] === "i") {
-      const uriToQuery = "https://ipfs.io/ipfs/" + x.substring(12, x.length);
-      queryIpfsMetadata(uriToQuery);
-    } else {
-      queryIpfsMetadata(x);
-    }
-  });
+const returnName = (metadataURI) => {
+  let name;
+  if (metadataURI[0] === "i") {
+    const uriToQuery = "https://ipfs.io/ipfs/" + x.substring(12, x.length);
+    queryIpfsMetadata(uriToQuery);
+  } else {
+    queryIpfsMetadata(metadataURI);
+  }
+  return name;
 };
 
 const queryIpfsMetadata = async (metadataURI) => {
   await fetch(metadataURI)
     .then((response) => response.json())
-    .then((data) => console.log(data));
+    .then((data) => {
+      console.log(data);
+      return data.name;
+    });
 };
 
 const returnDate = (epochTime) => {
@@ -84,21 +86,33 @@ bot.on(
               "There are no bids within the Teller protocol containing that address!",
           });
         } else {
-          const bid = bidDetails?.bids[0];
-          const marketplaceIDs = bidDetails?.bids
-            .map((x) => x.marketplaceId && x.marketplace.metadataURI)
-            .filter((value, index, self) => self.indexOf(value) === index);
-          checkIpfsMetadataType(marketplaceIDs);
-          const message = `Hello! The bid id ${bid.bidId} is a ${
-            bid?.status
-          } loan. The last time this loan was repaid was on: ${returnDate(
-            bid.lastRepaidTimestamp
-          )}`;
+          // return loans
+          const loans = bidDetails?.bids.filter(
+            (value, index, self) => self.indexOf(value) === index
+          );
 
-          bot.sendMessage({
-            to: channelID,
-            message: message,
+          // return loans with metadata
+          const loansWithMetadata = loans.map(async (x) => {
+            const name = queryIpfsMetadata(x.marketplace.metadataURI);
+            console.log("hello");
+            console.log(name);
+            return {
+              ...x,
+              name: name ? name : null,
+            };
           });
+          console.log(loansWithMetadata);
+          // send message to user
+          // const message = `Hello! The bid id ${bid.bidId} is a ${
+          //   bid?.status
+          // } loan. The last time this loan was repaid was on: ${returnDate(
+          //   bid.lastRepaidTimestamp
+          // )}`;
+
+          // bot.sendMessage({
+          //   to: channelID,
+          //   message: message,
+          // });
         }
       }
     }
