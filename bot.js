@@ -2,6 +2,8 @@ var Discord = require("discord.io");
 var logger = require("winston");
 var auth = require("./auth.json");
 var gql = require("graphql-request");
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const { fromUnixTime, format } = require("date-fns");
 
 // graphql client
@@ -29,14 +31,22 @@ const returnBidDetails = async (address) => {
   return data;
 };
 
-const queryIpfsMetadataURI = (metadataURI) => {
+const checkIpfsMetadataType = (metadataURI) => {
   metadataURI.map((x) => {
-    console.log(x);
+    console.log(fetch);
     if (x[0] === "i") {
       const uriToQuery = "https://ipfs.io/ipfs/" + x.substring(12, x.length);
-      console.log(uriToQuery);
+      queryIpfsMetadata(uriToQuery);
+    } else {
+      queryIpfsMetadata(x);
     }
   });
+};
+
+const queryIpfsMetadata = async (metadataURI) => {
+  await fetch(metadataURI)
+    .then((response) => response.json())
+    .then((data) => console.log(data));
 };
 
 const returnDate = (epochTime) => {
@@ -78,7 +88,7 @@ bot.on(
           const marketplaceIDs = bidDetails?.bids
             .map((x) => x.marketplaceId && x.marketplace.metadataURI)
             .filter((value, index, self) => self.indexOf(value) === index);
-          queryIpfsMetadataURI(marketplaceIDs);
+          checkIpfsMetadataType(marketplaceIDs);
           const message = `Hello! The bid id ${bid.bidId} is a ${
             bid?.status
           } loan. The last time this loan was repaid was on: ${returnDate(
